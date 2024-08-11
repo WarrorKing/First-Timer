@@ -1,37 +1,57 @@
 import discord
-from bot_logic import gen_pass
+from discord.ext import commands
+import os
 import random
+import requests
 
-def gen_pass(pass_length):
-    elements = "+-/*!&$#?=@<>"
-    password = ""
-
-    for i in range(pass_length):
-        password += random.choice(elements)
-
-    return password
-
-
-# La variable intents almacena los privilegios del bot
 intents = discord.Intents.default()
-# Activar el privilegio de lectura de mensajes
 intents.message_content = True
-# Crear un bot en la variable cliente y transferirle los privilegios
-client = discord.Client(intents=intents)
 
-@client.event
+bot = commands.Bot(command_prefix='$', intents=intents)
+
+@bot.event
 async def on_ready():
-    print(f'Hemos iniciado sesión como {client.user}')
+    print(f'We have logged in as {bot.user}')
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-    if message.content.startswith('$hello'):
-        await message.channel.send("Hi!")
-    elif message.content.startswith('$bye'):
-        await message.channel.send("\\U0001f642")
+@bot.command()
+async def hello(ctx):
+    await ctx.send(f'Hola, soy un bot {bot.user}!')
+
+@bot.command()
+async def heh(ctx, count_heh = 5):
+    await ctx.send("he" * count_heh)
+
+@bot.command()
+async def mem(ctx):
+    rarity = random.randint(1, 10)
+    if rarity == 1:
+        x = os.listdir('images2')
+        # ¡Y así es como se puede sustituir el nombre del fichero desde una variable!
+        with open(f'images/{random.choice(x)}', 'rb') as f:
+            # ¡Vamos a almacenar el archivo de la biblioteca Discord convertido en esta variable!
+            picture = discord.File(f)
+        # A continuación, podemos enviar este archivo como parámetro.
+        await ctx.send(file=picture)
     else:
-        await message.channel.send(message.content)
+        x = os.listdir('images')
+        # ¡Y así es como se puede sustituir el nombre del fichero desde una variable!
+        with open(f'images/{random.choice(x)}', 'rb') as f:
+            # ¡Vamos a almacenar el archivo de la biblioteca Discord convertido en esta variable!
+            picture = discord.File(f)
+        # A continuación, podemos enviar este archivo como parámetro.
+        await ctx.send(file=picture)
 
-client.run("Extra")
+def get_duck_image_url():
+    url = 'https://random-d.uk/api/random'
+    res = requests.get(url)
+    data = res.json()
+    return data['url']
+
+@bot.command()
+async def duck(ctx):
+    '''Una vez que llamamos al comando duck,
+    el programa llama a la función get_duck_image_url'''
+    image_url = get_duck_image_url()
+    await ctx.send(image_url)
+
+bot.run("Extra")
